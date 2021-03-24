@@ -14,7 +14,8 @@ class Sellers extends Model
         'location',
         'fssai_license',
         'gst',
-        'user_id'
+        'user_id',
+        'promocode'
     ];
 
     public function user() {

@@ -7,6 +7,7 @@ use App\Traits\FunctionalTraits;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Webpatser\Uuid\Uuid;
 
 class SellersController extends Controller
@@ -27,10 +28,26 @@ class SellersController extends Controller
 
         //Custom Validation Rules Traits
         $requestInputFields = [
-            'seller_category','name', 'brand_name','mobile','email','location','fssai_license', 'pincode', 'password'
+            'seller_category',
+            'name',
+            'brand_name',
+            'mobile',
+            'email',
+            'location',
+            'fssai_license',
+            'pincode',
+            'password',
         ];
         $alertValues        = [
-            'Category','Seller Name', 'Brand Name','Mobile','Email','Location','FSSAI License', 'Pincode', 'Password'
+            'Category',
+            'Seller Name',
+            'Brand Name',
+            'Mobile',
+            'Email',
+            'Location',
+            'FSSAI License',
+            'Pincode',
+            'Password'
         ];
 
         if($this->notSetRule($input, $requestInputFields, $alertValues )['status'] == 'error'){
@@ -69,13 +86,14 @@ class SellersController extends Controller
 
         $sellerData = [
             'seller_categories' => $input['seller_category'],
-            'brand_name'    => $input['brand_name'],
-            'address'   => $input['address'],
-            'pincode'   => $input['pincode'],
-            'location'  => $input['location'],
-            'fssai_license' => $input['fssai_license'],
-            'user_id'   => $data->id,
-            'gst'   => $input['gst'],
+            'brand_name'        => $input['brand_name'],
+            'address'           => $input['address'],
+            'pincode'           => $input['pincode'],
+            'location'          => $input['location'],
+            'fssai_license'     => $input['fssai_license'],
+            'user_id'           => $data->id,
+            'promocode'         => strtoupper(Str::random(6)),
+            'gst'               => $input['gst'],
 
         ];
 
