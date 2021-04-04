@@ -11,7 +11,7 @@ trait FileUploadTraits{
 
     use MediaGalleryTraits;
 
-    public function upload($field, $mediaType, $request){
+    public function upload($field, $mediaType, $request, $condition='single'){
 
         $mediaSettings  = $this->getMediaSettings($mediaType);
 
@@ -21,11 +21,45 @@ trait FileUploadTraits{
 
         $basePath           = $mediaSettings['data']['base_path'];
         $allowedExtensions  = json_decode($mediaSettings['data']['allowed_extensions']);
-        $path               = $basePath.$mediaType.'/'.$request['bucket_path']."/";
+        $path               = $basePath.$request['bucket_path']."/";
         $data               = [];
 
         if ($request->hasFile($field)) {
             $files  = $request->file($field);
+
+            if ($condition == 'multiple') {
+                return $this->uploadMultipleFiles($files, $request, $allowedExtensions, $path, $mediaType);
+            }
+
+            return $this->uploadSingleFile($files, $request, $allowedExtensions, $path, $mediaType);
+
+        }
+    }
+
+    public function getMediaSettings($mediaType) {
+
+        if ($mediaType) {
+            if(!$mediaSettings  = MediaSettings::where('media_type', $mediaType)->first()){
+                $response   =   [
+                    'status'    =>  'error',
+                    'message'   =>  $this->notExist("Media Settings"),
+                ];
+                return $response;
+            }
+
+            $response   =   [
+                'status'    => 'success',
+                'message'   => '',
+                'data'      => $mediaSettings
+            ];
+            return $response;
+        }
+
+    }
+
+    public function uploadMultipleFiles($files, $request, $allowedExtensions, $path, $mediaType) {
+
+        if ($files) {
             foreach ($files as $index=>$file ) {
                 if(!in_array($file->getClientOriginalExtension(), $allowedExtensions)){
                     $this->removeMediaGalleriesByUuid($request['uuid']);
@@ -50,7 +84,7 @@ trait FileUploadTraits{
                     'path'      => $path,
                     'uuid'      => $request['uuid']
 
-                    ])){
+                ])){
 
                     $this->removeMediaGalleriesByUuid($request['uuid']);
 
@@ -60,27 +94,35 @@ trait FileUploadTraits{
                     ];
                 }
             }
-        }
 
+        }
     }
 
-    public function getMediaSettings($mediaType) {
+    public function uploadSingleFile($files, $request, $allowedExtensions, $path, $mediaType)
+    {
+        if ($files){
+            if (!in_array($files -> getClientOriginalExtension(), $allowedExtensions)){
 
-        if ($mediaType) {
-            if(!$mediaSettings  = MediaSettings::where('media_type', $mediaType)->first()){
-                $response   =   [
-                    'status'    =>  'error',
-                    'message'   =>  $this->notExist("Media Settings"),
-                ];
-                return $response;
+                $this -> removeMediaGalleriesByUuid($request['uuid']);
+                return ['status' => 'error', 'message' => $this -> invalidFileFormat(),];
             }
 
-            $response   =   [
-                'status'    => 'success',
-                'message'   => '',
-                'data'      => $mediaSettings
-            ];
-            return $response;
+            $filename = time() . "." . $files -> getClientOriginalExtension();
+
+            if (!$files -> move($path, $filename)){
+                $this -> removeMediaGalleriesByUuid($request['uuid']);
+                return ['status' => 'error', 'message' => $this -> errorFileUpload(),];
+            }
+
+            if (!$mediaGallery = MediaGalleries ::create(['media_type' => $mediaType, 'filename' => $filename, //$file->getClientOriginalName(),
+                'path' => $path, 'uuid' => $request['uuid']
+
+            ])){
+
+                $this -> removeMediaGalleriesByUuid($request['uuid']);
+
+                return ['status' => 'error', 'message' => $this -> somethingWrong('when saving the media gallery.'),];
+            }
         }
 
     }

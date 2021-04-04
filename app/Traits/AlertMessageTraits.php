@@ -16,6 +16,11 @@ trait AlertMessageTraits{
     public function saveSuccess(){
         return "Saved Successfully";
     }
+
+    public function saveFail(){
+        return "Failed to save.";
+    }
+
     public function invalid($param){
         if(empty($param)){
             return "Invalid Data";

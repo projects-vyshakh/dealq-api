@@ -15,6 +15,22 @@ class CategoryController extends Controller
     public $errorStatus   = 401;
     public $category      = [];
 
+    public function index(Request  $request) {
+        $pageTitle      = 'Category';
+        $breadcrumbs    = 'Category';
+        $browserTitle   = 'Category';
+        $contentHeader  = 'Category';
+        $tableData      = $this->getCategoriesToTable();
+
+        $parameters = compact(
+            [
+                'pageTitle', 'breadcrumbs','browserTitle', 'contentHeader', 'tableData'
+            ]
+        );
+        return view('category.index', $parameters);
+    }
+
+
     //Categories add, list, delete
     public function createCategory(Request $request){
         $input          = $request->all();

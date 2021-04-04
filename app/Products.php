@@ -12,7 +12,7 @@ class Products extends Model
      * @var array
      */
     protected $fillable = [
-        'name', 'sku', 'uuid'
+        'name', 'sku', 'description','quantity','price','offer_price','category', 'uuid','is_active','sort_order', 'publish_status'
     ];
 
 }

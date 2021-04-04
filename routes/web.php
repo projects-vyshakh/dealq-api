@@ -18,3 +18,17 @@ Route::get('/', function () {
 });
 
 /*Route::any('login', 'UserController@login');*/
+
+Auth::routes();
+
+//Route::get('/home', 'HomeController@index')->name('home');
+
+Auth::routes();
+
+Route::get('/home', 'HomeController@index')->name('home');
+
+Route::group(['middleware'=>['web','auth']], function(){
+    Route::any('/category', 'CategoryController@index')->name('category');
+    Route::any('/products', 'SubscriptionsController@delete')->name('products');
+    Route::any('/sellers', 'SubscriptionsController@delete')->name('sellers');
+});

@@ -12,6 +12,9 @@ trait FunctionalTraits{
     use EmailTraits;
     use UtilityTraits;
     use ProductsTraits;
+    use CategoryTraits;
+    use UserTraits;
+    use QrTraits;
 
     public function checkRecordExist($models, $fieldNames, $fieldValues){
         if(!empty($models) && !empty($fieldNames) && !empty($fieldValues)){

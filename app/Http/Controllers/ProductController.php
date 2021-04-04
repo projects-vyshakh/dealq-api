@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\MediaGalleries;
 use App\ProductCategories;
 use App\ProductDetails;
 use App\ProductPrices;
 use App\Products;
 use App\Traits\FunctionalTraits;
 use Illuminate\Http\Request;
-use Webpatser\Uuid\Uuid;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
+
 
 class ProductController extends Controller
 {
@@ -23,8 +26,25 @@ class ProductController extends Controller
         $returnData     = [];
 
         //Custom Validation Rules Traits
-        $requestInputFields = ['name', 'sku', 'attribute_sets_id', 'quantity', 'price', 'offer_price', 'category'];
-        $alertValues        = ['Product Name', 'Sku', 'Attribute Set', 'Quantity', 'Price', 'Offer Price', 'Category'];
+        $requestInputFields = [
+            'name',
+            'sku',
+            'description',
+            'quantity',
+            'price',
+            'offer_price',
+            'category',
+
+        ];
+        $alertValues        = [
+            'Product Name',
+            'Sku',
+            'Description',
+            'Quantity',
+            'Price',
+            'Offer Price',
+            'Category'
+        ];
 
         if($this->notSetRule($input, $requestInputFields, $alertValues )['status'] == 'error'){
             return response()->json($this->notSetRule($input, $requestInputFields, $alertValues ), $this->errorStatus);
@@ -33,191 +53,309 @@ class ProductController extends Controller
             return response()->json($this->emptyRules($input, $requestInputFields, $alertValues), $this->errorStatus);
         }
 
-
-        $productData = $this->addToProducts($input);
-
-        if ($productData['status'] == 'error'){
-            if($this->alreadyExistRules($input, $requestInputFields, $alertValues)['status'] == 'error'){
-                return response()->json($this->alreadyExistRules($input, $requestInputFields, $alertValues), $this->errorStatus);
-            }
+        if ($this->getProductBySku($request['sku'])){
+            $response   =   [
+                'status'    => 'error',
+                'message'   => $this->alreadyExist('Product'),
+            ];
+            return $response;
         }
 
-        if ($productData && isset($productData['data'])){
-            $input['product_id']    = $productData['data']['id'];
-            $input['sku']           = $productData['data']['sku'];
-            $input['uuid']          = $productData['data']['uuid'];
+        $nextSortOrder  = $this->getNextSortOrder();
 
-            $productDetails     = $this->addToProductDetails($input);
-            $productPrices      = $this->addToProductPrice($input);
-            $productCategories  = $this->addToProductCategories($input);
-            //$productMedia       = $this->addToMediaGalleries($input);
+        //dd($nextSortOrder);
 
-            $this->addToProductDetails($input);
-            $this->addToProductPrice($input);
-            $this->addToProductCategories($input);
+        if (!$products = Products::create([
+            'name'              => $input['name'],
+            'sku'               => $input['sku'],
+            'description'       => $input['description'],
+            'quantity'          => $input['quantity'],
+            'price'             => $input['price'],
+            'offer_price'       => $input['offer_price'],
+            'category'          => $input['category'],
+            'uuid'              => $this->UuidGenerator(),
+            'is_active'         => $input['status'],
+            'sort_order'        => $nextSortOrder,
+            'publish_status'    => $input['publish_status']
+
+        ])) {
+
+
+            $response   =   [
+                'status'    =>  'error',
+                'message'   =>  $this->saveFail(),
+                'data'      =>  ''
+            ];
+            return response()->json($response, $this->successStatus);
+
         }
 
-        $products   = $this->getProductById($input['product_id']);
+        $request['product_id']  = $products->id;
+        $request['sku']         = $products->sku;
+        $request['uuid']        = $products->uuid;
+
+        $this->addProductMediaGalleries($request);
 
         $response   =   [
             'status'    =>  'success',
             'message'   =>  $this->saveSuccess(),
-            'data'      =>  $products
+            'data'      =>  $this->getProducts()
         ];
         return response()->json($response, $this->successStatus);
+
     }
 
-    public function addToProducts($input){
+    public function updateProduct(Request $request){
+        $input          = $request->all();
+        $returnData     = [];
 
-        if (isset($input['name']) && isset($input['sku'])){
-            $sku    = $input['sku'];
-            $name   = $input['name'];
-            if ($this->getProductBySku($sku)){
-                $response   =   [
-                    'status'    => 'error',
-                    'message'   => $this->alreadyExist('Product'),
-                ];
-                return $response;
-            }
-            else{
-                if (Products::create(['name'  => $name,
-                    'sku'=>$sku,
-                    'uuid'=>Uuid::generate()->string])
-                ){
-                    $response   =   [
-                        'status'    => 'success',
-                        'message'   => $this->saveSuccess(),
-                        'data'      => $this->getProductBySku($sku)
-                    ];
-                    return $response;
-                }
-            }
+
+        //Custom Validation Rules Traits
+        $requestInputFields = [
+            'product_id',
+            'name',
+            'description',
+            'quantity',
+            'price',
+            'offer_price',
+            'category',
+            'status'
+        ];
+        $alertValues        = [
+            'Product',
+            'Product Name',
+            'Description',
+            'Quantity',
+            'Price',
+            'Offer Price',
+            'Category',
+            'Status'
+        ];
+
+        if($this->notSetRule($input, $requestInputFields, $alertValues )['status'] == 'error'){
+            return response()->json($this->notSetRule($input, $requestInputFields, $alertValues ), $this->errorStatus);
         }
+        if($this->emptyRules($input, $requestInputFields, $alertValues)['status'] == 'error'){
+            return response()->json($this->emptyRules($input, $requestInputFields, $alertValues), $this->errorStatus);
+        }
+
+        if (!$this->getProductById($request['product_id'])) {
+            return    [
+                'status'    => 'error',
+                'message'   => $this->invalid('Product'),
+                'data'      => []
+            ];
+        }
+
+        $updateArray = [
+            'name'          => $input['name'],
+            'sku'           => $input['sku'],
+            'description'   => $input['description'],
+            'quantity'      => $input['quantity'],
+            'price'         => $input['price'],
+            'offer_price'   => $input['offer_price'],
+            'category'      => $input['category'],
+            'is_active'     => $input['status'],
+            'sort_order'    => $input['sort_order'],
+            'publish_status'=> $input['publish_status']
+        ];
+
+        if (!Products::where('id', $request['product_id'])->update($updateArray)) {
+            $response   =   [
+                'status'    =>  'error',
+                'message'   =>  $this->updateFailed(),
+                'data'      =>  ''
+            ];
+            return response()->json($response, $this->errorStatus);
+        }
+
+
+
+        $products = $this->getProductById($request['product_id']);
+
+        if ($products) {
+            foreach ($products as $product) {
+
+                $request['product_id']  = $product['id'];
+                $request['sku']         = $product['sku'];
+                $request['uuid']        = $product['uuid'];
+            }
+
+            if ($request->hasFile('product_image')) {
+                MediaGalleries::where('uuid', $request['uuid'])->delete();
+                $this->addProductMediaGalleries($request);
+            }
+
+            $response   =   [
+                'status'    =>  'success',
+                'message'   =>  $this->updateSuccess(),
+                'data'      =>  $products
+            ];
+            return response()->json($response, $this->successStatus);
+        }
+
     }
 
-    public function addToProductDetails($input){
-        if ($input && isset($input['product_id'])){
+    public function addProductMediaGalleries($request) {
 
-            if ($this->getProductDetailsByProductId($input['product_id'])){
-                $this->deleteProductDetailsByProductId($input['product_id']);
-            }
+        $bucketPath = 'catalog/products/'.$request['product_id'];
+        $request['bucket_path'] = $bucketPath;
+        $uploadData = $this->upload('product_image', 'images',  $request, 'multiple');
 
-            if (ProductDetails::create(
-                [
-                    'product_id'        => $input['product_id'],
-                    'attribute_sets_id' => $input['attribute_sets_id'],
-                    'description'       => $input['description']
-                ]
-            )){
-                $response   =   [
-                    'status'    => 'success',
-                    'message'   => $this->saveSuccess(),
-                    'data'      => $this->getProductDetailsByProductId($input['product_id'])
-                ];
-                return $response;
-            }
+        if ($uploadData['status'] == 'error') {
+            return $uploadData;
         }
+
     }
 
-    public function addToProductPrice($input){
-        if ($input && isset($input['product_id'])){
-            if ($this->getProductPriceByProductId($input['product_id'])){
-                $this->deleteProductPriceByProductId($input['product_id']);
-            }
+    public function listAllProducts(Request $request) {
 
-            if (ProductPrices::create(
-                [
-                    'product_id'        => $input['product_id'],
-                    'price'             => $input['price'],
-                    'offer_price'       => $input['offer_price'],
-                    'discount'          => $input['discount']
-                ]
-            )){
-                $response   =   [
-                    'status'    => 'success',
-                    'message'   => $this->saveSuccess(),
-                    'data'      => $this->getProductPriceByProductId($input['product_id'])
-                ];
-                return $response;
-            }
-
+        if ($this->getUserByAccessToken()['status'] == 'error') {
+            return [
+                'status'    => 'error',
+                'message'   => 'Invalid Access Token',
+                'data'      => []
+            ];
         }
-    }
 
-    public function addToProductCategories($input){
-        if ($input && isset($input['product_id'])){
-            if ($this -> getProductCategoryByProductId($input['product_id'])){
-                $this -> deleteProductCategoryByProductId($input['product_id']);
-            }
 
-            if (isset($input['category'])){
-                if (ProductCategories::create(
-                    [
-                        'product_id'        => $input['product_id'],
-                        'categories'        => implode(',', $input['category']),
-                    ]
-                )){
-                    $response   =   [
-                        'status'    => 'success',
-                        'message'   => $this->saveSuccess(),
-                        'data'      => $this->getProductCategoryByProductId($input['product_id'])
-                    ];
-                    return $response;
-                }
-            }
+        if (isset($this->getUserByAccessToken()['data']['role'])) {
+            $userRole = $this->getUserByAccessToken()['data']['role'];
+            $products   = $this->getProducts($userRole);
+
+            return [
+                'status'    => 'success',
+                'message'   => 'Product List',
+                'data'      => $products
+            ];
         }
-    }
 
-    public function addToMediaGalleries($input){
-        if ($input && isset($input['product_id'])){
-            /*if ($this -> getProductImagesByProductId($input['product_id'])){
-                $this -> deleteProductImagesByProductId($input['product_id']);
-            }*/
 
-        }
+
+
     }
 
     public function listProduct(Request $request){
 
+        $input          = $request->all();
+
+        //Custom Validation Rules Traits
+        $requestInputFields = [ 'product_id'];
+        $alertValues        = ['Product'];
+
+        if($this->notSetRule($input, $requestInputFields, $alertValues )['status'] == 'error'){
+            return response()->json($this->notSetRule($input, $requestInputFields, $alertValues ), $this->errorStatus);
+        }
+        if($this->emptyRules($input, $requestInputFields, $alertValues)['status'] == 'error'){
+            return response()->json($this->emptyRules($input, $requestInputFields, $alertValues), $this->errorStatus);
+        }
+
+        $product = $this->getProductById($request['product_id']);
+
+        if (!$product) {
+            return [
+                'status'    => 'error',
+                'message'   => 'Empty Product List',
+                'data'      => []
+            ];
+
+            return response()->json($response);
+        }
+
         $response   =   [
             'status'    => 'success',
             'message'   => 'Product List',
+            'data'      => $product
         ];
 
-        if ($request ){
-            if (isset($request['product_id']) && !empty($request['product_id'])){
-                $response['data']   = $this->getProductById($request['product_id']);
-            }
-            else{
-                $response['data']   = $this->getProduct();
-            }
-        }
 
         return response()->json($response);
     }
 
     public function deleteProduct(Request $request){
-        if ($request ){
-            if (isset($request['product_id']) && !empty($request['product_id'])){
-                $productId  = $request['product_id'];
-                $response   =   [
-                    'status'    => 'success',
-                    'message'   => $this->deleteSuccess('Product'),
-                ];
 
-                $this->deleteProductById($productId);
+        $input          = $request->all();
 
-            }
-            else{
-                $response   =   [
-                    'status'    => 'error',
-                    'message'   => $this->invalid('Product'),
-                ];
+        //Custom Validation Rules Traits
+        $requestInputFields = [ 'product_id'];
+        $alertValues        = ['Product'];
 
-            }
+        if($this->notSetRule($input, $requestInputFields, $alertValues )['status'] == 'error'){
+            return response()->json($this->notSetRule($input, $requestInputFields, $alertValues ), $this->errorStatus);
+        }
+        if($this->emptyRules($input, $requestInputFields, $alertValues)['status'] == 'error'){
+            return response()->json($this->emptyRules($input, $requestInputFields, $alertValues), $this->errorStatus);
         }
 
-        return response()->json($response);
+        if (!$this->getProductById($request['product_id'])) {
+            return [
+                'status'    => 'error',
+                'message'   => $this->invalid('Product'),
+                'data'      => []
+            ];
+
+            return response()->json($response);
+        }
+
+        if ($this->deleteProductById($request['product_id'])) {
+            $products   = $this->getProducts();
+            $response   =   [
+                'status'    => 'success',
+                'message'   => $this->deleteSuccess('Product'),
+                'data'      => $products
+            ];
+
+            return response()->json($response);
+
+        }
+        else {
+            return [
+                'status'    => 'error',
+                'message'   => $this->deleteFail('Product'),
+                'data'      => []
+            ];
+
+            return response()->json($response);
+        }
+
+    }
+
+    public function updatePublishStatus(Request $request) {
+        $input = $request->all();
+
+        //Custom Validation Rules Traits
+        $requestInputFields = [
+            'product_id',
+            'publish_status'
+
+        ];
+        $alertValues        = [
+            'Product',
+            'Publish Status'
+        ];
+
+        if($this->notSetRule($input, $requestInputFields, $alertValues )['status'] == 'error'){
+            return response()->json($this->notSetRule($input, $requestInputFields, $alertValues ), $this->errorStatus);
+        }
+
+
+        $productData = $this->getProductById($input['product_id']);
+
+        if ($productData) {
+            if (!Products::find($input['product_id'])->update(['publish_status'=>$input['publish_status']]) ) {
+                return    [
+                    'status'    => 'error',
+                    'message'   => $this->updateFailed(),
+                    'data'      => []
+                ];
+            }
+
+            return    [
+                'status'    => 'success',
+                'message'   => $this->updateSuccess(),
+                'data'      => $this->getProductById($input['product_id'])
+            ];
+        }
 
     }
 

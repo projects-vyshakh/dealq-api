@@ -91,8 +91,9 @@ class SellersController extends Controller
             'pincode'           => $input['pincode'],
             'location'          => $input['location'],
             'fssai_license'     => $input['fssai_license'],
+            'reference_code'    => strtoupper($input['reference_code']),
             'user_id'           => $data->id,
-            'promocode'         => strtoupper(Str::random(6)),
+            'promocode'         => strtoupper($this->randomStringGenerator(6)),
             'gst'               => $input['gst'],
 
         ];
@@ -119,6 +120,13 @@ class SellersController extends Controller
             return $brandImageUpload;
         }
 
+        $idProof = $this->addIdProof($request);
+        if ($idProof['status'] == 'error') {
+            Sellers::where('user_id', $data->id)->delete();
+            User::find($data->id)->delete();
+            return $idProof;
+        }
+
         $response   =   [
             'status'    =>  'success',
             'message'   =>  $this->saveSuccess(),
@@ -133,7 +141,19 @@ class SellersController extends Controller
 
         $bucketPath = 'shop/'.$request['uuid'];
         $request['bucket_path'] = $bucketPath;
-        $uploadData = $this->upload('shop_image', 'images',  $request);
+        $uploadData = $this->upload('shop_image', 'images',  $request, 'multiple');
+
+        if ($uploadData['status'] == 'error') {
+            return $uploadData;
+        }
+
+    }
+
+    public function addIdProof($request) {
+
+        $bucketPath = 'shop/'.$request['uuid'];
+        $request['bucket_path'] = $bucketPath;
+        $uploadData = $this->upload('id_proof', 'images',  $request, 'single');
 
         if ($uploadData['status'] == 'error') {
             return $uploadData;
