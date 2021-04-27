@@ -129,4 +129,20 @@ trait UserTraits{
             ->get();
     }
 
+    public function getUserByPhone($phone, $role) {
+        if ($phone) {
+            return User::where('phone', $phone)->where('role', $role)->first();
+        }
+    }
+
+    public function verifyOtp($otp, $phone) {
+
+        if (User::where('phone', $phone)->where('otp', $otp)->first()) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
 }

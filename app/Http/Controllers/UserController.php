@@ -47,7 +47,7 @@ class UserController extends Controller
                 ],
             ];
 
-            Session::put('api-role', Auth::user()->role);
+
 
             return response()->json($response, $this->successStatus);
 
@@ -160,7 +160,7 @@ class UserController extends Controller
             'password'  => Hash::make($request['password']),
             'phone'     => $input['phone'],
             'role'      => 'customer',
-            'status'    => 1,
+            'status'    => '1',
             'uuid'      => Uuid::generate()->string,
         ])){
 
@@ -434,6 +434,112 @@ class UserController extends Controller
         return response()->json([
             'message' => 'Successfully logged out'
         ]);
+    }
+
+    public function createUserWithMobile(Request $request) {
+        $input  = $request->all();
+
+
+        //Custom Validation Rules Traits
+        $requestInputFields = ['phone', 'role'];
+        $alertValues        = ['Phone', 'Role'];
+
+        if($this->notSetRule($input, $requestInputFields, $alertValues )['status'] == 'error'){
+            return response()->json($this->notSetRule($input, $requestInputFields, $alertValues ), $this->errorStatus);
+        }
+        if($this->emptyRules($input, $requestInputFields, $alertValues)['status'] == 'error'){
+            return response()->json($this->emptyRules($input, $requestInputFields, $alertValues), $this->errorStatus);
+        }
+
+        if ($user = $this->getUserByPhone($input['phone'], $input['role'])) {
+
+            if ($user['role'] == $input['role']) {
+                $response   =   [
+                    'status'    => $this->successStatus ,
+                    'message'   =>  $this->alreadyExist('Mobile number'),
+                    'data'      => []
+                ];
+                return response()->json($response, $this->errorStatus);
+            }
+        }
+
+
+        $array = [
+            'name'      => $input['phone'],
+            'uuid'      => Uuid::generate()->string,
+            'password'  => Hash::make($input['phone']),
+            'status'    => 1,
+            'role'      => $input['role'],
+            'phone'     => $input['phone'],
+            'otp'       => $this->randomNumberGenerator(4)
+        ];
+
+        if (User::create($array)) {
+            $response   =   [
+                'status'    =>  $this->successStatus,
+                'message'   =>  $this->saveSuccess(),
+                'data'      => ['otp' => $this->randomNumberGenerator(4)]
+            ];
+            return response()->json($response, $this->successStatus);
+        }
+
+    }
+
+    public function userOtpAuthentication(Request $request) {
+        $input  = $request->all();
+
+
+        //Custom Validation Rules Traits
+        $requestInputFields = ['phone', 'otp', 'role'];
+        $alertValues        = ['Phone', 'OTP', 'Role'];
+
+        if($this->notSetRule($input, $requestInputFields, $alertValues )['status'] == 'error'){
+            return response()->json($this->notSetRule($input, $requestInputFields, $alertValues ), $this->errorStatus);
+        }
+        if($this->emptyRules($input, $requestInputFields, $alertValues)['status'] == 'error'){
+            return response()->json($this->emptyRules($input, $requestInputFields, $alertValues), $this->errorStatus);
+        }
+
+        if (!$user = $this->getUserByPhone($input['phone'], $input['role'])) {
+            $response   =   [
+                'status'    =>  $this->successStatus,
+                'message'   =>  $this->invalid('User'),
+                'data'      => []
+            ];
+            return response()->json($response, $this->errorStatus);
+        }
+
+
+        if ($this->verifyOtp($input['otp'], $input['phone'])) {
+            User::where('phone', $input['phone'])->update(['otp'=>'']);
+
+            if (Auth::attempt(['email' => $user['email'], 'password' => $input['phone']])) {
+                $token  =   Auth::user()->createToken('DealQ');
+
+                $response   =   [
+                    'status'    =>  $this->successStatus,
+                    'message'   =>  $this->successLogin(),
+                    'data'      =>  [
+                        'userType'  =>  Auth::user()->role,
+                        //'authToken' =>  $request->bearerToken()
+                        'authToken' =>  $token
+                    ],
+                ];
+
+
+
+                return response()->json($response, $this->successStatus);
+
+            }
+
+        }
+
+        $response   =   [
+            'status'    =>  $this->successStatus,
+            'message'   =>  $this->invalid('Authentication Code'),
+            'data'      => []
+        ];
+        return response()->json($response, $this->errorStatus);
     }
 
 }

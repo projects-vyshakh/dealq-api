@@ -30,5 +30,10 @@ Route::get('/home', 'HomeController@index')->name('home');
 Route::group(['middleware'=>['web','auth']], function(){
     Route::any('/category', 'CategoryController@index')->name('category');
     Route::any('/products', 'SubscriptionsController@delete')->name('products');
-    Route::any('/sellers', 'SubscriptionsController@delete')->name('sellers');
+    Route::any('/sellers', 'SellersController@index')->name('sellers');
+
+
+    Route::any('/handleSellerStatus', 'SellersController@handleSellerStatus');
+
+    //Route::any('/sellers', 'SellersController@index')->name('category');
 });

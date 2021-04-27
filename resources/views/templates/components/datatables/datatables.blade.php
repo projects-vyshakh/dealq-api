@@ -4,12 +4,15 @@
     <link rel="stylesheet" href="{{URL::asset('assets/css/plugins/responsive.bootstrap4.min.css')}}">
 @endsection
 
-@section('content')
+@section('contents')
+    @csrf
     <div class="row">
         <!-- Config table start -->
         <div class="col-sm-12">
             <div class="card">
                 @yield('card-header')
+
+
 
                 @if ($tableData['tableHeadsCount'] > 0)
                     <div class="card-body">
@@ -49,7 +52,8 @@
     <script type="text/javascript" src="{{URL::asset('assets/js/plugins/jquery.dataTables.min.js')}}"></script>
     <script type="text/javascript" src="{{URL::asset('assets/js/plugins/dataTables.bootstrap4.min.js')}}"></script>
     <script type="text/javascript" src="{{URL::asset('assets/js/plugins/dataTables.responsive.min.js')}}"></script>
-    <script type="text/javascript" src="{{URL::asset('assets/js/pages/data-responsive-custom.js')}}"></script>
+{{--    <script type="text/javascript" src="{{URL::asset('assets/js/pages/data-responsive-custom.js')}}"></script>--}}
+    <script type="text/javascript" src="{{URL::asset('assets/js/custom/data-responsive-custom.js')}}"></script>
     <script type="text/javascript" src="{{URL::asset('assets/js/custom/newsletter.js')}}"></script>
 @endsection
 

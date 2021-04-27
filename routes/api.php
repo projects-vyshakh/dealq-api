@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 //    return $request->user();
 //});
 
-
+Route::any('seller-login', 'SellersController@sellerLogin');
 
 Route::any('login', 'UserController@login');
 
@@ -29,6 +29,10 @@ Route::any('listAllUsers', 'UserController@listAllUsers');
 Route::any('listUser', 'UserController@listUser');
 
 Route::any('createUser', 'UserController@createUser');
+
+Route::any('createUserWithMobile', 'UserController@createUserWithMobile');
+
+Route::any('userOtpAuthentication', 'UserController@userOtpAuthentication');
 
 Route::any('updateUser', 'UserController@updateUser');
 

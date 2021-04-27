@@ -6,6 +6,7 @@
 <script type="text/javascript" src="{{URL::asset('assets/js/menu-setting.min.js')}}"></script>
 <script type="text/javascript" src="{{URL::asset('assets/js/plugins/prism.js')}}"></script>
 <script type="text/javascript" src="{{URL::asset('assets/js/horizontal-menu.js')}}"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/5.5.2/bootbox.min.js"></script>
 
 
 <script>

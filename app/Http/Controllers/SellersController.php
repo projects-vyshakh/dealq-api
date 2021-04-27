@@ -6,6 +6,7 @@ use App\Sellers;
 use App\Traits\FunctionalTraits;
 use App\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Webpatser\Uuid\Uuid;
@@ -22,6 +23,66 @@ class SellersController extends Controller
     public function __construct(){
         //$this->middleware(['auth']);
     }
+
+    public function sellerLogin(Request $request) {
+        if (Auth::attempt(['email' => request('email'), 'password' => request('password')])) {
+
+            if (Auth::user()->status == 1) {
+                $token  =   Auth::user()->createToken('DealQ');
+
+                $response   =   [
+                    'status'    =>  'success',
+                    'message'   =>  $this->successLogin(),
+                    'data'      =>  [
+                        'userType'  =>  Auth::user()->role,
+                        //'authToken' =>  $request->bearerToken()
+                        'authToken' =>  $token
+                    ],
+                ];
+
+
+
+                return response()->json($response, $this->successStatus);
+            }
+
+            else {
+                    $response   =   [
+                        'status'    =>  'error',
+                        'message'   =>  $this->accountInactive(),
+                    ];
+                    return response()->json($response, $this->errorStatus);
+
+            }
+
+
+        }
+        else {
+            $response   =   [
+                'status'    =>  'error',
+                'message'   =>  $this->failedLogin(),
+            ];
+            return response()->json($response, $this->errorStatus);
+        }
+    }
+
+    public function index() {
+
+        $pageTitle      = 'Sellers';
+        $breadcrumbs    = 'Sellers';
+        $browserTitle   = 'Sellers';
+        $contentHeader  = 'Sellers';
+        $tableData      = $this->getSellersToTable();
+
+        //dd($tableData);
+
+        $parameters = compact(
+            [
+                'pageTitle', 'breadcrumbs','browserTitle', 'contentHeader', 'tableData'
+            ]
+        );
+        return view('sellers.index', $parameters);
+    }
+
     public function createSeller(Request $request) {
 
         $input          = $request->all();
@@ -71,7 +132,6 @@ class SellersController extends Controller
             'password'  => Hash::make($request['password']),
             'phone'     => $input['mobile'],
             'role'      => 'seller',
-            'status'    => 0,
             'uuid'      => Uuid::generate()->string,
         ])){
 
@@ -159,5 +219,11 @@ class SellersController extends Controller
             return $uploadData;
         }
 
+    }
+
+    public function handleSellerStatus(Request $request) {
+        $seller = $this->changeSellerStatus($request['status'], $request['seller']);
+
+        return json_encode($seller);
     }
 }

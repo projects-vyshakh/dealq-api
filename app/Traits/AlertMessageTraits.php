@@ -100,4 +100,8 @@ trait AlertMessageTraits{
     public function noRecordAvailable(){
         return 'No Record Available';
     }
+
+    public function accountInactive() {
+        return 'Your account is not active/suspended. Please contact administrator.';
+    }
 }

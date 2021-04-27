@@ -16,6 +16,16 @@ trait UtilityTraits{
 
     }
 
+    public function randomNumberGenerator($length = 0) {
+        $result = '';
+
+        for($i = 0; $i < $length; $i++) {
+            $result .= mt_rand(0, 9);
+        }
+
+        return $result;
+    }
+
     public function UuidGenerator() {
 
         return Uuid::generate()->string;
