@@ -11,7 +11,7 @@
                         <span class="pcoded-mtext">Dashboard</span></a>
                 </li>
 
-                <li class="nav-item pcoded-hasmenu">
+                {{--<li class="nav-item pcoded-hasmenu">
                     <a href="#!" class="nav-link ">
                         <span class="pcoded-micon"><i class="feather icon-layout"></i></span>
                         <span class="pcoded-mtext">Catalog</span>
@@ -20,7 +20,7 @@
                         <li><a href="{{route('category')}}">Category</a></li>
                         <li><a href="{{route('products')}}">Products</a></li>
                       </ul>
-                </li>
+                </li>--}}
                 <li class="nav-item pcoded-hasmenu">
                     <a href="#!" class="nav-link ">
                         <span class="pcoded-micon"><i class="feather icon-layers"></i></span>

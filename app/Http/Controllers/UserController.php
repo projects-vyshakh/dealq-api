@@ -26,8 +26,6 @@ class UserController extends Controller
     use HasApiTokens;
 
     public $successStatus = 200;
-    public $errorStatus   = 401;
-
 
     public function login(Request $request) {
         //dd($request);
@@ -57,7 +55,7 @@ class UserController extends Controller
                 'status'    =>  'error',
                 'message'   =>  $this->failedLogin(),
             ];
-            return response()->json($response, $this->errorStatus);
+            return response()->json($response, $this->successStatus);
         }
     }
 
@@ -70,10 +68,10 @@ class UserController extends Controller
         $alertValues        = ['Role'];
 
         if($this->notSetRule($input, $requestInputFields, $alertValues )['status'] == 'error'){
-            return response()->json($this->notSetRule($input, $requestInputFields, $alertValues ), $this->errorStatus);
+            return response()->json($this->notSetRule($input, $requestInputFields, $alertValues ), $this->successStatus);
         }
         if($this->emptyRules($input, $requestInputFields, $alertValues)['status'] == 'error'){
-            return response()->json($this->emptyRules($input, $requestInputFields, $alertValues), $this->errorStatus);
+            return response()->json($this->emptyRules($input, $requestInputFields, $alertValues), $this->successStatus);
         }
 
         if (!$users = $this->getUsersByRole($input['role'])) {
@@ -82,7 +80,7 @@ class UserController extends Controller
                 'message'   =>  $this->noRecordAvailable(),
                 'data'      => []
             ];
-            return response()->json($response, $this->errorStatus);
+            return response()->json($response, $this->successStatus);
         }
 
 
@@ -106,10 +104,10 @@ class UserController extends Controller
         $alertValues        = ['User'];
 
         if($this->notSetRule($input, $requestInputFields, $alertValues )['status'] == 'error'){
-            return response()->json($this->notSetRule($input, $requestInputFields, $alertValues ), $this->errorStatus);
+            return response()->json($this->notSetRule($input, $requestInputFields, $alertValues ), $this->successStatus);
         }
         if($this->emptyRules($input, $requestInputFields, $alertValues)['status'] == 'error'){
-            return response()->json($this->emptyRules($input, $requestInputFields, $alertValues), $this->errorStatus);
+            return response()->json($this->emptyRules($input, $requestInputFields, $alertValues), $this->successStatus);
         }
 
         if (!$users = $this->getUsersByRoleAndId('customer',$input['user_id'])) {
@@ -118,7 +116,7 @@ class UserController extends Controller
                 'message'   =>  $this->noRecordAvailable(),
                 'data'      => []
             ];
-            return response()->json($response, $this->errorStatus);
+            return response()->json($response, $this->successStatus);
         }
 
 
@@ -140,10 +138,10 @@ class UserController extends Controller
         $alertValues        = ['Name', 'Email', 'Phone', 'Password', 'Pincode', 'Location'];
 
         if($this->notSetRule($input, $requestInputFields, $alertValues )['status'] == 'error'){
-            return response()->json($this->notSetRule($input, $requestInputFields, $alertValues ), $this->errorStatus);
+            return response()->json($this->notSetRule($input, $requestInputFields, $alertValues ), $this->successStatus);
         }
         if($this->emptyRules($input, $requestInputFields, $alertValues)['status'] == 'error'){
-            return response()->json($this->emptyRules($input, $requestInputFields, $alertValues), $this->errorStatus);
+            return response()->json($this->emptyRules($input, $requestInputFields, $alertValues), $this->successStatus);
         }
 
         //Checking Unique Columns
@@ -151,7 +149,7 @@ class UserController extends Controller
         $fieldValues    = [$input['email']];
         $models         = 'App\User';
         if($this->checkRecordExist('App\User', $fieldNames, $fieldValues)['status'] == 'error'){
-            return response()->json($this->checkRecordExist('App\User', $fieldNames, $fieldValues), $this->errorStatus);
+            return response()->json($this->checkRecordExist('App\User', $fieldNames, $fieldValues), $this->successStatus);
         }
 
         if(!$data = User::create([
@@ -169,7 +167,7 @@ class UserController extends Controller
                 'message'   => $this->somethingWrong('when creating Customers Data'),
                 'data'      => []
             ];
-            return response()->json($response, $this->errorStatus);
+            return response()->json($response, $this->successStatus);
         }
 
         $request['user_id'] = $data->id;
@@ -190,7 +188,7 @@ class UserController extends Controller
                 'message'   => $this->somethingWrong('when creating Customers Data'),
                 'data'      => []
             ];
-            return response()->json($response, $this->errorStatus);
+            return response()->json($response, $this->successStatus);
 
         }
 
@@ -234,10 +232,10 @@ class UserController extends Controller
         $alertValues        = ['user_id','Name', 'Email', 'Phone', 'Pincode', 'Location'];
 
         if($this->notSetRule($input, $requestInputFields, $alertValues )['status'] == 'error'){
-            return response()->json($this->notSetRule($input, $requestInputFields, $alertValues ), $this->errorStatus);
+            return response()->json($this->notSetRule($input, $requestInputFields, $alertValues ), $this->successStatus);
         }
         if($this->emptyRules($input, $requestInputFields, $alertValues)['status'] == 'error'){
-            return response()->json($this->emptyRules($input, $requestInputFields, $alertValues), $this->errorStatus);
+            return response()->json($this->emptyRules($input, $requestInputFields, $alertValues), $this->successStatus);
         }
 
         if(!$user = User::find($input['user_id'])){
@@ -246,7 +244,7 @@ class UserController extends Controller
                 'message'   =>  $this->invalid('User'),
                 'data'      => []
             ];
-            return response()->json($response, $this->errorStatus);
+            return response()->json($response, $this->successStatus);
         }
 
         if($input['email']!=$user['email']){
@@ -255,7 +253,7 @@ class UserController extends Controller
             $fieldValues    = [$input['email']];
             $models         = 'App\User';
             if($this->checkRecordExist('App\User', $fieldNames, $fieldValues)['status'] == 'error'){
-                return response()->json($this->checkRecordExist('App\User', $fieldNames, $fieldValues), $this->errorStatus);
+                return response()->json($this->checkRecordExist('App\User', $fieldNames, $fieldValues), $this->successStatus);
             }
         }
 
@@ -325,7 +323,7 @@ class UserController extends Controller
                 'message'   =>  $this->updateFailed(),
                 'data'      => []
             ];
-            return response()->json($response, $this->errorStatus);
+            return response()->json($response, $this->successStatus);
         }
 
         $customerArray = [
@@ -341,7 +339,7 @@ class UserController extends Controller
                 'message'   =>  $this->updateFailed(),
                 'data'      => []
             ];
-            return response()->json($response, $this->errorStatus);
+            return response()->json($response, $this->successStatus);
         }
 
 
@@ -364,10 +362,10 @@ class UserController extends Controller
         $alertValues        = ['User'];
 
         if($this->notSetRule($input, $requestInputFields, $alertValues )['status'] == 'error'){
-            return response()->json($this->notSetRule($input, $requestInputFields, $alertValues ), $this->errorStatus);
+            return response()->json($this->notSetRule($input, $requestInputFields, $alertValues ), $this->successStatus);
         }
         if($this->emptyRules($input, $requestInputFields, $alertValues)['status'] == 'error'){
-            return response()->json($this->emptyRules($input, $requestInputFields, $alertValues), $this->errorStatus);
+            return response()->json($this->emptyRules($input, $requestInputFields, $alertValues), $this->successStatus);
         }
 
         if(!$user = User::find($input['user_id'])){
@@ -376,7 +374,7 @@ class UserController extends Controller
                 'message'   =>  $this->invalid('User'),
                 'data'      => []
             ];
-            return response()->json($response, $this->errorStatus);
+            return response()->json($response, $this->successStatus);
         }
 
         //Delete Media
@@ -392,7 +390,7 @@ class UserController extends Controller
                 'message'   =>  $this->deleteFail('User'),
                 'data'      => []
             ];
-            return response()->json($response, $this->errorStatus);
+            return response()->json($response, $this->successStatus);
         }
 
         $response   =   [
@@ -445,21 +443,26 @@ class UserController extends Controller
         $alertValues        = ['Phone', 'Role'];
 
         if($this->notSetRule($input, $requestInputFields, $alertValues )['status'] == 'error'){
-            return response()->json($this->notSetRule($input, $requestInputFields, $alertValues ), $this->errorStatus);
+            return response()->json($this->notSetRule($input, $requestInputFields, $alertValues ), $this->successStatus);
         }
         if($this->emptyRules($input, $requestInputFields, $alertValues)['status'] == 'error'){
-            return response()->json($this->emptyRules($input, $requestInputFields, $alertValues), $this->errorStatus);
+            return response()->json($this->emptyRules($input, $requestInputFields, $alertValues), $this->successStatus);
         }
 
         if ($user = $this->getUserByPhone($input['phone'], $input['role'])) {
 
             if ($user['role'] == $input['role']) {
+
+                User::where('phone', $input['phone'])->where('role',$input['role'])->update(['otp'=>$this->randomNumberGenerator(4)]);
+
+                $data =  User::where('phone', $input['phone'])->where('role',$input['role'])->select('phone', 'otp')->first();
+
                 $response   =   [
                     'status'    => $this->successStatus ,
                     'message'   =>  $this->alreadyExist('Mobile number'),
-                    'data'      => []
+                    'data'      => $data
                 ];
-                return response()->json($response, $this->errorStatus);
+                return response()->json($response, $this->successStatus);
             }
         }
 
@@ -467,6 +470,7 @@ class UserController extends Controller
         $array = [
             'name'      => $input['phone'],
             'uuid'      => Uuid::generate()->string,
+            'email'     => $input['phone'].'@demo.com',
             'password'  => Hash::make($input['phone']),
             'status'    => 1,
             'role'      => $input['role'],
@@ -475,10 +479,11 @@ class UserController extends Controller
         ];
 
         if (User::create($array)) {
+            $user = User::where('phone',$input['phone'])->select('phone', 'otp')->first();
             $response   =   [
                 'status'    =>  $this->successStatus,
                 'message'   =>  $this->saveSuccess(),
-                'data'      => ['otp' => $this->randomNumberGenerator(4)]
+                'data'      => $user
             ];
             return response()->json($response, $this->successStatus);
         }
@@ -487,17 +492,17 @@ class UserController extends Controller
 
     public function userOtpAuthentication(Request $request) {
         $input  = $request->all();
-
+        $todayDate = date('Y-m-d H:i:s');
 
         //Custom Validation Rules Traits
         $requestInputFields = ['phone', 'otp', 'role'];
         $alertValues        = ['Phone', 'OTP', 'Role'];
 
         if($this->notSetRule($input, $requestInputFields, $alertValues )['status'] == 'error'){
-            return response()->json($this->notSetRule($input, $requestInputFields, $alertValues ), $this->errorStatus);
+            return response()->json($this->notSetRule($input, $requestInputFields, $alertValues ), $this->successStatus);
         }
         if($this->emptyRules($input, $requestInputFields, $alertValues)['status'] == 'error'){
-            return response()->json($this->emptyRules($input, $requestInputFields, $alertValues), $this->errorStatus);
+            return response()->json($this->emptyRules($input, $requestInputFields, $alertValues), $this->successStatus);
         }
 
         if (!$user = $this->getUserByPhone($input['phone'], $input['role'])) {
@@ -506,12 +511,27 @@ class UserController extends Controller
                 'message'   =>  $this->invalid('User'),
                 'data'      => []
             ];
-            return response()->json($response, $this->errorStatus);
+            return response()->json($response, $this->successStatus);
         }
 
 
+        if (!$this->makeSubscriptionInactive($user['id'])) {
+            $subscrptionStatus = [
+                'code'=>200, 'status' => false, 'message'=>'No active subscription', 'data'=>[]
+            ];
+        }
+        else {
+            $subscrptionStatus = [
+                'code'=>200, 'status' => true, 'message'=>'Active Subscription', 'data'=>[]
+            ];
+        }
+
+
+
         if ($this->verifyOtp($input['otp'], $input['phone'])) {
-            User::where('phone', $input['phone'])->update(['otp'=>'']);
+
+            //User::where('phone', $input['phone'])->update(['otp'=>'']);
+
 
             if (Auth::attempt(['email' => $user['email'], 'password' => $input['phone']])) {
                 $token  =   Auth::user()->createToken('DealQ');
@@ -522,7 +542,8 @@ class UserController extends Controller
                     'data'      =>  [
                         'userType'  =>  Auth::user()->role,
                         //'authToken' =>  $request->bearerToken()
-                        'authToken' =>  $token
+                        'authToken' =>  $token,
+                        'subscription' => $subscrptionStatus
                     ],
                 ];
 
@@ -539,7 +560,7 @@ class UserController extends Controller
             'message'   =>  $this->invalid('Authentication Code'),
             'data'      => []
         ];
-        return response()->json($response, $this->errorStatus);
+        return response()->json($response, $this->successStatus);
     }
 
 }

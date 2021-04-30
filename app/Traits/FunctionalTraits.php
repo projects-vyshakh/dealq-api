@@ -16,6 +16,7 @@ trait FunctionalTraits{
     use UserTraits;
     use QrTraits;
     use SellerTraits;
+    use SubscriptionTraits;
 
     public function checkRecordExist($models, $fieldNames, $fieldValues){
         if(!empty($models) && !empty($fieldNames) && !empty($fieldValues)){

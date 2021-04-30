@@ -30,6 +30,9 @@ class CategoryController extends Controller
         return view('category.index', $parameters);
     }
 
+    public function multiLevelCategory(Request $request) {
+        dd(app_path());
+    }
 
     //Categories add, list, delete
     public function createCategory(Request $request){

@@ -30,6 +30,8 @@ Route::any('listUser', 'UserController@listUser');
 
 Route::any('createUser', 'UserController@createUser');
 
+Route::any('multiLevelCategory', 'CategoryController@multiLevelCategory');
+
 Route::any('createUserWithMobile', 'UserController@createUserWithMobile');
 
 Route::any('userOtpAuthentication', 'UserController@userOtpAuthentication');
@@ -59,6 +61,12 @@ Route::any('deleteProduct', 'ProductController@deleteProduct');
 Route::any('createSeller', 'SellersController@createSeller');
 
 Route::any('generateQrCode', 'QrController@generateQrCode');
+
+Route::any('listSubscriptionPlans', 'SubscriptionsController@listSubscriptionPlans');
+
+Route::any('addSubscription', 'SubscriptionsController@addSubscription');
+
+
 
 
 

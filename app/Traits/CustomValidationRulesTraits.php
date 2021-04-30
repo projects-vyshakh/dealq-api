@@ -12,8 +12,10 @@ trait CustomValidationRulesTraits{
             foreach($requestInputFields as $index=> $requestInputs){
                 if(!isset($request[$requestInputs])){
                     $response   =   [
-                        'status'    =>  'error',
+                        'code'      => 200,
+                        'status'    =>  false,
                         'message'   =>  $this->invalid($alertValues[$index]),
+                        'data'      => []
                     ];
                     return $response;
                 }
@@ -27,8 +29,10 @@ trait CustomValidationRulesTraits{
             foreach($requestInputFields as $index=> $requestInputs){
                 if(empty($request[$requestInputs])){
                     $response   =   [
-                        'status'    =>  'error',
+                        'code'      => 200,
+                        'status'    =>  false,
                         'message'   =>  $this->emptyFieldsAlert(),
+                        'data'      => []
                     ];
                     return $response;
                 }
