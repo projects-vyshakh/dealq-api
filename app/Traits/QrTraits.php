@@ -17,4 +17,22 @@ trait QrTraits{
                 ->first();
         }
     }
+
+    public function getAllQrByUserIdAndProductId($userId, $productId) {
+        if ($userId && $productId) {
+            $qrData= QrGenerated::where('user_id', $userId)->where('product_id', $productId)->get();
+            $qr = [];
+            if ($qrData) {
+
+                foreach ($qrData as $index=> $item) {
+                    $qr[] = $item['qr_path'];
+
+                }
+            }
+
+            //dd();
+
+           return $qr;
+        }
+    }
 }

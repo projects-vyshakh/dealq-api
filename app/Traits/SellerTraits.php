@@ -98,9 +98,32 @@ trait SellerTraits{
     }
 
     public function updateSeller($data, $seller) {
-
         $seller = $this->getSellerById($seller);
+    }
 
+    public function getSellerRegistrationStatus($userId) {
+        if ($userId) {
+            if (Sellers::where('user_id', $userId)->first()){
+                return [
+                    'code' => 200,
+                    'status' => true,
+                    'message' => 'Registration Completed',
+                ];
+            }
+            else {
+                return [
+                    'code' => 200,
+                    'status' => false,
+                    'message' => 'Registration Incomplete',
+                ];
+            }
 
+        }
+    }
+
+    public function getSellerByUserId($userId) {
+        if ($userId) {
+            return Sellers::where('user_id', $userId)->first();
+        }
     }
 }

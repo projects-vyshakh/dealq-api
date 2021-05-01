@@ -97,7 +97,6 @@ class SellersController extends Controller
             'location',
             'fssai_license',
             'pincode',
-            'password',
         ];
         $alertValues        = [
             'Category',
@@ -108,7 +107,7 @@ class SellersController extends Controller
             'Location',
             'FSSAI License',
             'Pincode',
-            'Password'
+
         ];
 
         if($this->notSetRule($input, $requestInputFields, $alertValues )['status'] == 'error'){
@@ -118,21 +117,76 @@ class SellersController extends Controller
             return response()->json($this->emptyRules($input, $requestInputFields, $alertValues), $this->errorStatus);
         }
 
+        if (!isset($input['id_proof']) && empty($input['id_proof'])) {
+            $response   =   [
+                'code'      => 200,
+                'status'    => 'false',
+                'message'   => $this->invalid('ID Proof'),
+                'data'      => []
+            ];
+            return response()->json($response, $this->successStatus);
+        }
+
+        if (!isset($input['shop_licence']) && empty($input['shop_licence'])) {
+            $response   =   [
+                'code'      => 200,
+                'status'    => 'false',
+                'message'   => $this->invalid('Shop Licence'),
+                'data'      => []
+            ];
+            return response()->json($response, $this->successStatus);
+        }
+
+
+
+
+
         //Checking Unique Columns
-        $fieldNames     = ['email'];
+        /*$fieldNames     = ['email'];
         $fieldValues    = [$input['email']];
         $models         = 'App\User';
         if($this->checkRecordExist('App\User', $fieldNames, $fieldValues)['status'] == 'error'){
             return response()->json($this->checkRecordExist('App\User', $fieldNames, $fieldValues), $this->errorStatus);
+        }*/
+
+        if (!$user = User::where('phone', $input['phone'])->where('role', $input['role'])->first()) {
+            $response   =   [
+                'code'      => 200,
+                'status'    => 'error',
+                'message'   => 'No account exist with '.$input['phone'].' as '. $input['role'],
+                'data'      => []
+            ];
+            return response()->json($response, $this->successStatus);
         }
 
-        if(!$data = User::create([
+        $dataArray = [
+            'name'      => $input['name'],
+            'email'     => $input['email'],
+            'status'    => '1',
+            'uuid'      => Uuid::generate()->string,
+        ];
+
+        if (!User::where('phone', $input['phone'])->where('role', $input['role'])->update($dataArray)) {
+            $response   =   [
+                'code'      => 200,
+                'status'    => 'false',
+                'message'   => $this->somethingWrong('when updating Seller Data'),
+                'data'      => []
+            ];
+            return response()->json($response, $this->successStatus);
+        }
+
+
+        $data = User::where('phone', $input['phone'])->where('role', $input['role'])->first();
+
+
+        /*if(!$data = User::create([
             'name'      => $input['name'],
             'email'     => $input['email'],
             'password'  => Hash::make($request['password']),
             'phone'     => $input['mobile'],
             'role'      => 'seller',
-            'uuid'      => Uuid::generate()->string,
+            'uuid'      => Uuid::generate()->string
         ])){
 
             $response   =   [
@@ -141,7 +195,7 @@ class SellersController extends Controller
                 'data'      => []
             ];
             return response()->json($response, $this->errorStatus);
-        }
+        }*/
 
 
         $sellerData = [
@@ -169,21 +223,24 @@ class SellersController extends Controller
 
         }
 
+        //Getting registration status for seller
+        //$registrationStatus = $this->getSellerRegistrationStatus($data['id']);
+
         $sellers = User::join('sellers as s','s.user_id','=','users.id')->get();
 
         $request['uuid']    = $data->uuid;
         $brandImageUpload = $this->addBrandImages($request);
 
         if ($brandImageUpload['status'] == 'error') {
-            Sellers::where('user_id', $data->id)->delete();
-            User::find($data->id)->delete();
+            //Sellers::where('user_id', $data->id)->delete();
+            //User::find($data->id)->delete();
             return $brandImageUpload;
         }
 
         $idProof = $this->addIdProof($request);
         if ($idProof['status'] == 'error') {
-            Sellers::where('user_id', $data->id)->delete();
-            User::find($data->id)->delete();
+           // Sellers::where('user_id', $data->id)->delete();
+           // User::find($data->id)->delete();
             return $idProof;
         }
 
@@ -202,6 +259,17 @@ class SellersController extends Controller
         $bucketPath = 'shop/'.$request['uuid'];
         $request['bucket_path'] = $bucketPath;
         $uploadData = $this->upload('shop_image', 'images',  $request, 'multiple');
+
+        if ($uploadData['status'] == 'error') {
+            return $uploadData;
+        }
+
+    }
+    public function addLicence($request) {
+
+        $bucketPath = 'shop/'.$request['uuid'];
+        $request['bucket_path'] = $bucketPath;
+        $uploadData = $this->upload('shop_licence', 'images',  $request, 'single');
 
         if ($uploadData['status'] == 'error') {
             return $uploadData;

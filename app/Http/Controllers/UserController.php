@@ -134,8 +134,8 @@ class UserController extends Controller
         //$password   = $this->randomStringGenerator(8);
 
         //Custom Validation Rules Traits
-        $requestInputFields = ['name', 'email', 'phone', 'password', 'pincode', 'location'];
-        $alertValues        = ['Name', 'Email', 'Phone', 'Password', 'Pincode', 'Location'];
+        $requestInputFields = ['name', 'email', 'phone',  'pincode', 'location', 'role'];
+        $alertValues        = ['Name', 'Email', 'Phone',  'Pincode', 'Location', 'Role'];
 
         if($this->notSetRule($input, $requestInputFields, $alertValues )['status'] == 'error'){
             return response()->json($this->notSetRule($input, $requestInputFields, $alertValues ), $this->successStatus);
@@ -145,14 +145,44 @@ class UserController extends Controller
         }
 
         //Checking Unique Columns
-        $fieldNames     = ['email'];
-        $fieldValues    = [$input['email']];
+       /* $fieldNames     = ['phone', 'role'];
+        $fieldValues    = [$input['email'], $input['role']];
         $models         = 'App\User';
         if($this->checkRecordExist('App\User', $fieldNames, $fieldValues)['status'] == 'error'){
             return response()->json($this->checkRecordExist('App\User', $fieldNames, $fieldValues), $this->successStatus);
+        }*/
+
+        if (!$user = User::where('phone', $input['phone'])->where('role', $input['role'])->first()) {
+            $response   =   [
+                'code'      => 200,
+                'status'    => 'error',
+                'message'   => 'No account exist with '.$input['phone'].' as '. $input['role'],
+                'data'      => []
+            ];
+            return response()->json($response, $this->successStatus);
         }
 
-        if(!$data = User::create([
+        $dataArray = [
+            'name'      => $input['name'],
+            'email'     => $input['email'],
+            'status'    => '1',
+            'uuid'      => Uuid::generate()->string,
+        ];
+
+        if (!User::where('phone', $input['phone'])->where('role', $input['role'])->update($dataArray)) {
+            $response   =   [
+                'code'      => 200,
+                'status'    => 'false',
+                'message'   => $this->somethingWrong('when updating Customers Data'),
+                'data'      => []
+            ];
+            return response()->json($response, $this->successStatus);
+        }
+
+        $data = User::where('phone', $input['phone'])->where('role', $input['role'])->first();
+
+
+        /*if(!$data = User::create([
             'name'      => $input['name'],
             'email'     => $input['email'],
             'password'  => Hash::make($request['password']),
@@ -168,7 +198,7 @@ class UserController extends Controller
                 'data'      => []
             ];
             return response()->json($response, $this->successStatus);
-        }
+        }*/
 
         $request['user_id'] = $data->id;
         $request['uuid']    = $data->uuid;
@@ -181,9 +211,10 @@ class UserController extends Controller
             'location'          => $request['location']
         ])) {
 
-            User::where('id', $request['user_id'])->delete();
+            //User::where('id', $request['user_id'])->delete();
 
             $response   =   [
+                'code'      => 200,
                 'status'    => 'error',
                 'message'   => $this->somethingWrong('when creating Customers Data'),
                 'data'      => []
@@ -199,15 +230,15 @@ class UserController extends Controller
 
         if ($imageUpload['status'] == 'error') {
 
-            Customers::where('user_id', $request['user_id'])->delete();
-            User::where('id', $request['user_id'])->delete();
+            //Customers::where('user_id', $request['user_id'])->delete();
+            //User::where('id', $request['user_id'])->delete();
             return $imageUpload;
 
         }
         if ($documentUpload['status'] == 'error') {
 
-            Customers::where('user_id', $request['user_id'])->delete();
-            User::where('id', $request['user_id'])->delete();
+            //Customers::where('user_id', $request['user_id'])->delete();
+            //User::where('id', $request['user_id'])->delete();
             return $documentUpload;
 
         }
@@ -479,7 +510,7 @@ class UserController extends Controller
         ];
 
         if (User::create($array)) {
-            $user = User::where('phone',$input['phone'])->select('phone', 'otp')->first();
+            $user = User::where('phone',$input['phone'])->where('role',$input['role'])->select('phone', 'otp')->first();
             $response   =   [
                 'status'    =>  $this->successStatus,
                 'message'   =>  $this->saveSuccess(),
@@ -515,39 +546,52 @@ class UserController extends Controller
         }
 
 
-        if (!$this->makeSubscriptionInactive($user['id'])) {
-            $subscrptionStatus = [
-                'code'=>200, 'status' => false, 'message'=>'No active subscription', 'data'=>[]
-            ];
+        //User Registration status
+        $registrationStatus = $this->getUserRegistration($user['id'], $input['role']);
+
+        if ($input['role']  == 'seller') {
+            if (!$this->makeSubscriptionInactive($user['id'])) {
+                $subscrptionStatus = [
+                    'code'=>200, 'status' => false, 'message'=>'No active subscription', 'data'=>[]
+                ];
+            }
+            else {
+                $subscrptionStatus = [
+                    'code'=>200, 'status' => true, 'message'=>'Active Subscription', 'data'=>[]
+                ];
+            }
         }
         else {
             $subscrptionStatus = [
-                'code'=>200, 'status' => true, 'message'=>'Active Subscription', 'data'=>[]
+                'code'=>200, 'status' => true, 'message'=>'No subscription for customers', 'data'=>[]
             ];
         }
 
+        if ($this->verifyOtp($input['otp'], $input['phone'], $input['role'])) {
+
+            $password   = $input['phone'];
+            $user      = User::where('phone', $input['phone'])->where('role', $input['role'])->select('email')->first();
+
+            $userData = $this->getUsersByPhoneAndRole($input['phone'], $input['role']);
 
 
-        if ($this->verifyOtp($input['otp'], $input['phone'])) {
-
-            //User::where('phone', $input['phone'])->update(['otp'=>'']);
-
-
-            if (Auth::attempt(['email' => $user['email'], 'password' => $input['phone']])) {
+            if (Auth::attempt(['email' => $user['email'], 'password'=>$password])) {
                 $token  =   Auth::user()->createToken('DealQ');
 
                 $response   =   [
                     'status'    =>  $this->successStatus,
                     'message'   =>  $this->successLogin(),
                     'data'      =>  [
-                        'userType'  =>  Auth::user()->role,
+                        'userType'              =>  Auth::user()->role,
+                        'userData'              => $userData,
                         //'authToken' =>  $request->bearerToken()
-                        'authToken' =>  $token,
-                        'subscription' => $subscrptionStatus
+                        'authToken'             =>  $token,
+                        'subscription'          => $subscrptionStatus,
+                        'registrationStatus'    => $registrationStatus
                     ],
                 ];
 
-
+                User::where('phone', $input['phone'])->update(['otp'=>'']);
 
                 return response()->json($response, $this->successStatus);
 

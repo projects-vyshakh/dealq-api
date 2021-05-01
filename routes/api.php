@@ -54,6 +54,8 @@ Route::any('listAllProducts', 'ProductController@listAllProducts');
 
 Route::any('listProduct', 'ProductController@listProduct');
 
+Route::any('productQuantityUpdate', 'ProductController@productQuantityUpdate');
+
 Route::any('updatePublishStatus', 'ProductController@updatePublishStatus');
 
 Route::any('deleteProduct', 'ProductController@deleteProduct');
@@ -61,6 +63,8 @@ Route::any('deleteProduct', 'ProductController@deleteProduct');
 Route::any('createSeller', 'SellersController@createSeller');
 
 Route::any('generateQrCode', 'QrController@generateQrCode');
+
+Route::any('listQrForProductAndUser', 'QrController@listQrForProductAndUser');
 
 Route::any('listSubscriptionPlans', 'SubscriptionsController@listSubscriptionPlans');
 

@@ -16,6 +16,7 @@
         "laravel/passport": "^9.3",
         "laravel/tinker": "^2.0",
         "laravel/ui": "^2.4",
+        "simplesoftwareio/simple-qrcode": "^4.2",
         "symfony/psr-http-message-bridge": "^2.0",
         "webpatser/laravel-uuid": "^3.0"
     },

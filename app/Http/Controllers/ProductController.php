@@ -359,4 +359,63 @@ class ProductController extends Controller
 
     }
 
+    public function productQuantityUpdate(Request $request) {
+        $input          = $request->all();
+
+        //Custom Validation Rules Traits
+        $requestInputFields = [ 'product_id', 'quantity'];
+        $alertValues        = ['Product', 'Quantity'];
+
+        if($this->notSetRule($input, $requestInputFields, $alertValues )['status'] == 'error'){
+            return response()->json($this->notSetRule($input, $requestInputFields, $alertValues ), $this->errorStatus);
+        }
+        if($this->emptyRules($input, $requestInputFields, $alertValues)['status'] == 'error'){
+            return response()->json($this->emptyRules($input, $requestInputFields, $alertValues), $this->errorStatus);
+        }
+
+        if (!$product = $this->getProductById($request['product_id'])) {
+            return [
+                'status'    => 'error',
+                'message'   => $this->invalid('Product'),
+                'data'      => []
+            ];
+
+            return response()->json($response);
+        }
+
+        if ($input['quantity'] > $product[0]['quantity']) {
+            return [
+                'status'    => false,
+                'message'   => 'Requested quantity exceeded the existing product quantity.',
+                'data'      => []
+            ];
+        }
+
+        if ($product[0]['quantity'] < 1) {
+            return [
+                'status'    => false,
+                'message'   => 'Not sufficient Quantity..',
+                'data'      => []
+            ];
+        }
+
+        if ($product[0]['quantity'] > $input['quantity']) {
+            $quantity = $product[0]['quantity'] - $input['quantity'];
+            if (Products::find($input['product_id'])->update(['quantity'=>$quantity])) {
+                return [
+                    'status'    => true,
+                    'message'   => 'Quantity Updated',
+                    'data'      => []
+                ];
+            }
+        }
+
+        return [
+            'status'    => false,
+            'message'   => 'Not sufficient Quantity.',
+            'data'      => []
+        ];
+
+    }
+
 }

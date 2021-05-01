@@ -23,7 +23,7 @@ trait FunctionalTraits{
             foreach($fieldNames as $index=> $fieldName){
                 if($models::where($fieldName, $fieldValues[$index])->count()){
                     $response   =   [
-                        'status'    =>  'error',
+                        'status'    =>  'false',
                         'message'   =>  $this->alreadyExist($fieldValues[$index]),
                         'data'      => []
                     ];

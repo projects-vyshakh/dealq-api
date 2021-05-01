@@ -8,12 +8,13 @@ use App\Services;
 trait CustomValidationRulesTraits{
 
     public function notSetRule($request, $requestInputFields, $alertValues){
+
         if(!empty($requestInputFields)){
             foreach($requestInputFields as $index=> $requestInputs){
                 if(!isset($request[$requestInputs])){
                     $response   =   [
                         'code'      => 200,
-                        'status'    =>  false,
+                        'status'    =>  'error',
                         'message'   =>  $this->invalid($alertValues[$index]),
                         'data'      => []
                     ];
@@ -30,7 +31,7 @@ trait CustomValidationRulesTraits{
                 if(empty($request[$requestInputs])){
                     $response   =   [
                         'code'      => 200,
-                        'status'    =>  false,
+                        'status'    =>  error,
                         'message'   =>  $this->emptyFieldsAlert(),
                         'data'      => []
                     ];
